@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>نظام الأصناف المتقدم</title>
+<style>
+  body{margin:0;font-family:Arial;background:#000;color:#fff}
+  .top{padding:18px;text-align:center}
+  .container{display:flex;gap:18px;flex-wrap:wrap;padding:18px}
+  .card{border:2px solid #00ffff;background:#000;color:#fff;padding:14px 18px;border-radius:10px;cursor:pointer;text-align:center;width:200px;transition:.18s}
+  .card:hover{background:#00ffff;color:#000;transform:scale(1.03)}
+  .section{display:none;padding:18px}
+  .section.active{display:block}
+  .controls{max-width:900px;margin:0 auto}
+  select,input{width:100%;padding:8px;margin:6px 0;border:1px solid #00ffff;border-radius:6px;background:#000;color:#fff}
+  button.btn{border:2px solid #00ffff;background:#000;color:#fff;padding:8px 12px;border-radius:6px;cursor:pointer;transition:.18s;margin:6px 6px 6px 0}
+  button.btn:hover{background:#00ffff;color:#000}
+  table{width:100%;border-collapse:collapse;margin-top:10px}
+  th,td{border:1px solid #00ffff;padding:8px;text-align:center}
+  .cat-header{background:yellow;color:black;font-weight:700}
+  .row-normal td{background:#000;color:#fff}
+  .row-loss td{background:#000000;color:#ffffff;font-weight:700}
+  .history-row td{background:#111;color:#ddd;text-align:left;padding:6px}
+  .small-btn{padding:4px 8px;border-radius:6px;border:1px solid #00ffff;background:#000;color:#fff;cursor:pointer}
+  .small-btn:hover{background:#00ffff;color:#000}
+  .note{color:#00ffff;font-size:14px;margin-top:6px}
+  .flex-row{display:flex;gap:12px;flex-wrap:wrap}
+  .col{flex:1;min-width:220px}
+  .hidden{display:none}
+  .search{margin:8px 0;padding:8px;border:1px solid #00ffff;border-radius:6px;background:#000;color:#fff;width:100%}
+  .muted{color:#bbb;font-size:13px}
+</style>
+</head>
+<body>
+  <div class="top">
+    <h1>نظام الأصناف — متقدم</h1>
+    <p class="muted">تصميم ليلي | أزرار سماوية | حفظ أوتوماتيكي للتاريخ والوقت</p>
+  </div>
+
+  <div class="container">
+    <div class="card" id="btnMain" onclick="showSection('home')">الرئيسية</div>
+    <div class="card" id="btnCategories" onclick="showSection('categoriesMain')">الأصناف</div>
+  </div>
+
+  <!-- HOME -->
+  <div id="home" class="section active">
+    <div class="controls">
+      <h2>الصفحة الرئيسية</h2>
+      <p class="note">اضغط "الأصناف" للذهاب لإدارة الأصناف (إضافة - عرض - بحث - سجل الأسعار).</p>
+    </div>
+  </div>
+
+  <!-- CATEGORIES MAIN -->
+  <div id="categoriesMain" class="section">
+    <div class="controls">
+      <div class="flex-row">
+        <button class="btn" onclick="openAdd()">إضافة صنف/نوع</button>
+        <button class="btn" onclick="openView()">عرض الأصناف</button>
+        <button class="btn" onclick="showSection('home')">رجوع للرئيسية</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD PAGE -->
+  <div id="addPage" class="section">
+    <div class="controls">
+      <h2>إضافة صنف / نوع</h2>
+
+      <label>اختر المصنف الرئيسي</label>
+      <select id="categorySelect" onchange="onCategoryChange()"></select>
+
+      <div id="newCategoryDiv" class="hidden">
+        <label>اسم المصنف الجديد</label>
+        <input id="newCategoryName" placeholder="اكتب اسم المصنف الجديد (مثال: بهارات)">
+      </div>
+
+      <label>اختر النوع</label>
+      <select id="typeSelect" onchange="onTypeChange()"></select>
+
+      <div id="newTypeDiv" class="hidden">
+        <label>اسم النوع الجديد</label>
+        <input id="newTypeName" placeholder="اكتب اسم النوع الجديد (مثال: سكري كبير)">
+      </div>
+
+      <div class="flex-row">
+        <div class="col">
+          <label>سعر الشراء</label>
+          <input id="purchasePrice" type="number" min="0" placeholder="مثال: 10">
+        </div>
+        <div class="col">
+          <label>سعر البيع</label>
+          <input id="sellPrice" type="number" min="0" placeholder="مثال: 15">
+        </div>
+        <div class="col">
+          <label>الكمية</label>
+          <input id="quantity" type="number" min="0" placeholder="مثال: 5">
+        </div>
+      </div>
+
+      <div style="margin-top:8px">
+        <button class="btn" onclick="saveItem()">حفظ</button>
+        <button class="btn" onclick="showSection('categoriesMain')">رجوع</button>
+      </div>
+
+      <p class="note">ملاحظة: يمكنك اختيار "جديد" لإنشاء مصنف/نوع جديد. إذا كان سعر البيع أقل من الشراء سيظهر تحذير ويمكنك تأكيد الحفظ.</p>
+    </div>
+  </div>
+
+  <!-- VIEW PAGE -->
+  <div id="viewPage" class="section">
+    <div class="controls">
+      <h2>عرض الأصناف</h2>
+      <input id="searchBox" class="search" placeholder="ابحث باسم المصنف أو النوع..." oninput="renderView()" />
+      <div id="tablesContainer"></div>
+      <div style="margin-top:12px">
+        <button class="btn" onclick="showSection('categoriesMain')">رجوع</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+let categories = JSON.parse(localStorage.getItem('categories_v2') || '[]');
+
+function saveStorage(){
+  localStorage.setItem('categories_v2', JSON.stringify(categories));
+}
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id === 'viewPage') renderView();
+  if(id === 'addPage') prepareAddPage();
+}
+function openAdd(){ showSection('addPage'); }
+function openView(){ showSection('viewPage'); }
+
+function prepareAddPage(){
+  const catSel = document.getElementById('categorySelect');
+  catSel.innerHTML = '';
+  const names = categories.map(c=>c.name);
+  names.forEach(n=>{
+    const opt = document.createElement('option'); opt.value = n; opt.text = n; catSel.appendChild(opt);
+  });
+  const optNew = document.createElement('option'); optNew.value='__new__'; optNew.text='جديد'; catSel.appendChild(optNew);
+  catSel.value = names.length ? names[0] : '__new__';
+  onCategoryChange();
+}
+
+function onCategoryChange(){
+  const catSel = document.getElementById('categorySelect');
+  const typeSel = document.getElementById('typeSelect');
+  const newCatDiv = document.getElementById('newCategoryDiv');
+  const newTypeDiv = document.getElementById('newTypeDiv');
+
+  if(catSel.value === '__new__'){
+    newCatDiv.classList.remove('hidden');
+    typeSel.innerHTML = '';
+    const t = document.createElement('option'); t.value='__new__'; t.text='جديد'; typeSel.appendChild(t);
+    typeSel.value='__new__';
+    newTypeDiv.classList.remove('hidden');
+  } else {
+    newCatDiv.classList.add('hidden');
+    newTypeDiv.classList.add('hidden');
+    const cat = categories.find(c => c.name === catSel.value);
+    typeSel.innerHTML = '';
+    if(cat){
+      Object.keys(cat.types).forEach(tn=>{
+        const opt = document.createElement('option'); opt.value = tn; opt.text = tn; typeSel.appendChild(opt);
+      });
+    }
+    const optNew = document.createElement('option'); optNew.value='__new__'; optNew.text='جديد'; typeSel.appendChild(optNew);
+    typeSel.value = (typeSel.options.length? typeSel.options[0].value : '__new__');
+  }
+}
+
+function onTypeChange(){
+  const typeSel = document.getElementById('typeSelect');
+  const newTypeDiv = document.getElementById('newTypeDiv');
+  if(typeSel.value === '__new__') newTypeDiv.classList.remove('hidden');
+  else newTypeDiv.classList.add('hidden');
+}
+
+function saveItem(){
+  let category = document.getElementById('categorySelect').value;
+  const newCategoryName = document.getElementById('newCategoryName').value.trim();
+  if(category === '__new__'){
+    if(!newCategoryName){ alert('اكتب اسم المصنف الجديد أولاً'); return; }
+    if(categories.some(c=>c.name.toLowerCase()===newCategoryName.toLowerCase())){ alert('المصنف موجود مسبقاً'); return; }
+    category = newCategoryName;
+    categories.push({name: category, types: { }});
+  }
+
+  let type = document.getElementById('typeSelect').value;
+  const newTypeName = document.getElementById('newTypeName').value.trim();
+  if(type === '__new__'){
+    if(!newTypeName){ alert('اكتب اسم النوع الجديد أولاً'); return; }
+    const catObj = categories.find(c=>c.name===category);
+    if(catObj && Object.keys(catObj.types).some(tn=>tn.toLowerCase()===newTypeName.toLowerCase())){
+      alert('النوع موجود سابقاً تحت هذا المصنف'); return;
+    }
+    type = newTypeName;
+  }
+
+  const purchase = document.getElementById('purchasePrice').value;
+  const sell = document.getElementById('sellPrice').value;
+  const qty = document.getElementById('quantity').value;
+  const purchaseNum = purchase === '' ? null : Number(purchase);
+  const sellNum = sell === '' ? null : Number(sell);
+  const qtyNum = qty === '' ? null : Number(qty);
+
+  if(purchaseNum !== null && sellNum !== null && sellNum < purchaseNum){
+    const ok = confirm('سعر البيع أقل من سعر الشراء — سوف تخسر! هل تريد المتابعة؟');
+    if(!ok) return;
+  }
+
+  const rowEntry = { purchase: purchaseNum, sell: sellNum, qty: qtyNum, datetime: new Date().toLocaleString() };
+  let catObj = categories.find(c=>c.name===category);
+  if(!catObj){ catObj = {name:category, types: {}}; categories.push(catObj); }
+  if(!catObj.types[type]) catObj.types[type] = [];
+  catObj.types[type].push(rowEntry);
+
+  saveStorage();
+  document.getElementById('newCategoryName').value='';
+  document.getElementById('newTypeName').value='';
+  document.getElementById('purchasePrice').value='';
+  document.getElementById('sellPrice').value='';
+  document.getElementById('quantity').value='';
+  alert('تم الحفظ.');
+}
+
+function renderView(){
+  const container = document.getElementById('tablesContainer');
+  container.innerHTML = '';
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+
+  categories.forEach(cat => {
+    const matchingTypes = Object.keys(cat.types).filter(tname => {
+      if(!q) return true;
+      return cat.name.toLowerCase().includes(q) || tname.toLowerCase().includes(q);
+    });
+    if(matchingTypes.length === 0) return;
+
+    const tbl = document.createElement('table');
+    const hdr = tbl.insertRow();
+    const th = document.createElement('th');
+    th.colSpan = 9; th.className = 'cat-header'; th.innerText = cat.name;
+    hdr.appendChild(th);
+
+    const headerRow = tbl.insertRow();
+    ['النوع','سعر الشراء','سعر البيع','الكمية','التاريخ','سجل الأسعار','ملاحظة'].forEach(h=>{
+      const c = document.createElement('th'); c.innerText = h; headerRow.appendChild(c);
+    });
+
+    matchingTypes.forEach(typeName => {
+      const entries = cat.types[typeName]; 
+      if(!entries || entries.length===0) return;
+      const latest = entries[entries.length - 1];
+      const tr = tbl.insertRow();
+      const isLoss = (latest.purchase !== null && latest.sell !== null && latest.sell < latest.purchase);
+      tr.className = isLoss ? 'row-loss' : 'row-normal';
+
+      // النوع
+      tr.insertCell().innerText = typeName;
+
+      // سعر الشراء
+      const purchaseCell = tr.insertCell();
+      purchaseCell.innerText = latest.purchase === null ? '' : latest.purchase;
+      purchaseCell.contentEditable = true;
+      purchaseCell.style.cursor = 'text';
+      purchaseCell.onblur = () => updateValue(cat.name, typeName, entries.length-1, 'purchase', purchaseCell.innerText);
+
+      // سعر البيع
+      const sellCell = tr.insertCell();
+      sellCell.innerText = latest.sell === null ? '' : latest.sell;
+      sellCell.contentEditable = true;
+      sellCell.style.cursor = 'text';
+      sellCell.onblur = () => updateValue(cat.name, typeName, entries.length-1, 'sell', sellCell.innerText);
+
+      // الكمية
+      const qtyCell = tr.insertCell();
+      qtyCell.innerText = latest.qty === null ? '' : latest.qty;
+      qtyCell.contentEditable = true;
+      qtyCell.style.cursor = 'text';
+      qtyCell.onblur = () => updateValue(cat.name, typeName, entries.length-1, 'qty', qtyCell.innerText);
+
+      // التاريخ
+      tr.insertCell().innerText = latest.datetime || '';
+
+      // زر السجل
+      const histCell = tr.insertCell();
+      const showBtn = document.createElement('button');
+      showBtn.className = 'small-btn';
+      showBtn.innerText = '⯆';
+      showBtn.dataset.cat = cat.name;
+      showBtn.dataset.type = typeName;
+      showBtn.onclick = toggleHistoryRow;
+      histCell.appendChild(showBtn);
+
+      // ملاحظة
+      const noteCell = tr.insertCell();
+      noteCell.innerText = isLoss ? 'خسارة' : 'ربح';
+      noteCell.style.color = isLoss ? 'red' : 'lime';
+
+      // صف مخفي للسجل
+      const histTr = tbl.insertRow();
+      histTr.className = 'history-row';
+      const histTd = document.createElement('td');
+      histTd.colSpan = 9;
+      histTd.style.display = 'none';
+      const innerTable = document.createElement('table');
+      innerTable.style.width = '100%';
+      innerTable.innerHTML = `<tr><th>سعر الشراء</th><th>سعر البيع</th><th>الكمية</th><th>التاريخ</th></tr>`;
+      entries.slice().reverse().forEach(ent=>{
+        const r = innerTable.insertRow();
+        r.insertCell().innerText = ent.purchase === null ? '' : ent.purchase;
+        r.insertCell().innerText = ent.sell === null ? '' : ent.sell;
+        r.insertCell().innerText = ent.qty === null ? '' : ent.qty;
+        r.insertCell().innerText = ent.datetime || '';
+      });
+      histTd.appendChild(innerTable);
+      histTr.appendChild(histTd);
+    });
+
+    container.appendChild(tbl);
+    container.appendChild(document.createElement('br'));
+  });
+}
+
+function toggleHistoryRow(e){
+  const btn = e.currentTarget;
+  const row = btn.closest('tr');
+  if(!row) return;
+  const nextRow = row.nextElementSibling;
+  if(!nextRow) return;
+  const cell = nextRow.querySelector('td');
+  if(!cell) return;
+  cell.style.display = (cell.style.display==='none' || cell.style.display==='') ? 'table-cell' : 'none';
+}
+
+function updateValue(catName, typeName, index, field, value){
+  const catObj = categories.find(c=>c.name===catName);
+  if(!catObj) return;
+  const entries = catObj.types[typeName];
+  if(!entries || !entries[index]) return;
+  const num = value.trim() === '' ? null : Number(value);
+  entries[index][field] = num;
+  saveStorage();
+  renderView();
+}
+
+prepareAddPage();
+if(document.getElementById('viewPage').classList.contains('active')) renderView();
+</script>
+</body>
+</html>
