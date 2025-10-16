@@ -1,0 +1,81 @@
+<h2>الموردين</h2>
+<input type="text" id="supplierName" placeholder="اسم المورد">
+<input type="text" id="supplierPhone1" placeholder="رقم المورد 1">
+<input type="text" id="supplierPhone2" placeholder="رقم المورد 2 (اختياري)">
+<input type="text" id="companyName" placeholder="اسم الشركة">
+<input type="text" id="companyNum1" placeholder="رقم الشركة 1">
+<input type="text" id="companyNum2" placeholder="رقم الشركة 2 (اختياري)">
+<button onclick="addSupplier()">إضافة مورد</button>
+
+<table id="supplierTable">
+<tr>
+<th>اسم المورد</th><th>رقم المورد 1</th><th>رقم المورد 2</th>
+<th>اسم الشركة</th><th>رقم الشركة 1</th><th>رقم الشركة 2</th><th>حذف</th>
+</tr>
+</table>
+
+<script>
+let suppliers = JSON.parse(localStorage.getItem('suppliers') || '[]');
+
+function saveAndRenderSuppliers() {
+    localStorage.setItem('suppliers', JSON.stringify(suppliers));
+    renderSuppliers();
+}
+
+function renderSuppliers() {
+    const table = document.getElementById('supplierTable');
+    table.innerHTML = `<tr>
+        <th>اسم المورد</th><th>رقم المورد 1</th><th>رقم المورد 2</th>
+        <th>اسم الشركة</th><th>رقم الشركة 1</th><th>رقم الشركة 2</th><th>حذف</th>
+    </tr>`;
+    suppliers.forEach((s, i) => {
+        const row = table.insertRow();
+        row.insertCell(0).innerText = s.name;
+        row.insertCell(1).innerText = s.phone1;
+        row.insertCell(2).innerText = s.phone2 || '';
+        row.insertCell(3).innerText = s.companyName;
+        row.insertCell(4).innerText = s.companyNum1;
+        row.insertCell(5).innerText = s.companyNum2 || '';
+        const del = row.insertCell(6);
+        const btn = document.createElement('button');
+        btn.innerText = 'حذف';
+        btn.onclick = () => {
+            suppliers.splice(i, 1);
+            saveAndRenderSuppliers();
+        };
+        del.appendChild(btn);
+    });
+}
+
+function addSupplier() {
+    const name = document.getElementById('supplierName').value.trim();
+    const phone1 = document.getElementById('supplierPhone1').value.trim();
+    const phone2 = document.getElementById('supplierPhone2').value.trim();
+    const companyName = document.getElementById('companyName').value.trim();
+    const companyNum1 = document.getElementById('companyNum1').value.trim();
+    const companyNum2 = document.getElementById('companyNum2').value.trim();
+
+    if(name && phone1 && companyName && companyNum1) {
+        suppliers.push({
+            name,
+            phone1,
+            phone2,
+            companyName,
+            companyNum1,
+            companyNum2
+        });
+        saveAndRenderSuppliers();
+
+        // مسح الحقول بعد الإضافة
+        document.getElementById('supplierName').value = '';
+        document.getElementById('supplierPhone1').value = '';
+        document.getElementById('supplierPhone2').value = '';
+        document.getElementById('companyName').value = '';
+        document.getElementById('companyNum1').value = '';
+        document.getElementById('companyNum2').value = '';
+    }
+}
+
+// عند تحميل الصفحة
+renderSuppliers();
+</script>
